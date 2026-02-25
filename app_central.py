@@ -15,9 +15,50 @@ import altair as alt
 import itertools
 import concurrent.futures
 import base64
-# import subprocess
+import subprocess
 # import atexit
 # import glob # glob é ótimo para encontrar arquivos com padrões, como "robot_instance_*.py"
+
+# ==============================================================================
+# VERIFICAÇÃO E INSTALAÇÃO DO PLAYWRIGHT (SOLUÇÃO DEFINITIVA)
+# ==============================================================================
+import sys
+from streamlit.web import cli as stcli
+
+def install_playwright():
+    """
+    Usa subprocesso para chamar o comando de instalação do Playwright.
+    Isso garante que o navegador seja instalado no ambiente do Streamlit Cloud.
+    """
+    st.info("🔧 Preparando o ambiente do robô pela primeira vez. Isso pode levar um minuto...")
+    try:
+        # Usamos o executável do python do ambiente atual para garantir consistência
+        python_executable = sys.executable
+        subprocess.run(
+            [python_executable, "-m", "playwright", "install", "--with-deps", "chromium"],
+            capture_output=True, text=True, check=True
+        )
+        st.success("✅ Ambiente pronto!")
+        st.info("A aplicação será reiniciada para usar as novas ferramentas. Por favor, aguarde.")
+        time.sleep(5) # Dá tempo para o usuário ler a mensagem
+        st.rerun() # Força o reinício da aplicação
+    except subprocess.CalledProcessError as e:
+        st.error("Falha ao instalar o navegador do Playwright.")
+        st.code(f"Erro: {e.stderr}")
+        st.stop()
+    except Exception as e:
+        st.error(f"Um erro inesperado ocorreu durante a instalação: {e}")
+        st.stop()
+
+# Verifica se o navegador está instalado. Se não, executa a instalação.
+# A verificação é feita checando a existência de um arquivo específico do chromium.
+# O caminho pode variar um pouco, mas a ausência do diretório é um bom indicador.
+chromium_path = os.path.expanduser("~/.cache/ms-playwright/chromium-1091") # Exemplo de caminho
+if 'playwright_installed' not in st.session_state and not os.path.exists(chromium_path):
+    install_playwright()
+    st.session_state.playwright_installed = True
+
+# ==============================================================================
 
 # =============================================================================
 # FUNÇÃO DE LIMPEZA DE ARQUIVOS TEMPORÁRIOS
