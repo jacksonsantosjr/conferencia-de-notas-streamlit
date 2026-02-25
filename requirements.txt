@@ -4,3 +4,4 @@ playwright
 openpyxl
 psutil
 PyMuPDF
+pytesseract
