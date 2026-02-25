@@ -20,43 +20,49 @@ import subprocess
 # import glob # glob é ótimo para encontrar arquivos com padrões, como "robot_instance_*.py"
 
 # ==============================================================================
-# VERIFICAÇÃO E INSTALAÇÃO DO PLAYWRIGHT (SOLUÇÃO DEFINITIVA)
+# VERIFICAÇÃO E INSTALAÇÃO DO PLAYWRIGHT (VERSÃO FINAL CORRIGIDA)
 # ==============================================================================
 import sys
 from streamlit.web import cli as stcli
 
-def install_playwright():
-    """
-    Usa subprocesso para chamar o comando de instalação do Playwright.
-    Isso garante que o navegador seja instalado no ambiente do Streamlit Cloud.
-    """
+# Define o caminho onde o Playwright guarda seus navegadores
+PLAYWRIGHT_CACHE_DIR = os.path.expanduser("~/.cache/ms-playwright")
+
+# Função para verificar se o Chromium parece estar instalado
+def is_chromium_installed():
+    if not os.path.exists(PLAYWRIGHT_CACHE_DIR):
+        return False
+    # Procura por qualquer pasta de chromium, independentemente da versão
+    for item in os.listdir(PLAYWRIGHT_CACHE_DIR):
+        if "chromium" in item and os.path.isdir(os.path.join(PLAYWRIGHT_CACHE_DIR, item)):
+            return True
+    return False
+
+# A função de instalação agora sem o '--with-deps'
+def install_playwright_chromium():
     st.info("🔧 Preparando o ambiente do robô pela primeira vez. Isso pode levar um minuto...")
     try:
-        # Usamos o executável do python do ambiente atual para garantir consistência
         python_executable = sys.executable
-        subprocess.run(
-            [python_executable, "-m", "playwright", "install", "--with-deps", "chromium"],
+        # Executa a instalação SEM o --with-deps para evitar o pedido de senha 'sudo'
+        result = subprocess.run(
+            [python_executable, "-m", "playwright", "install", "chromium"],
             capture_output=True, text=True, check=True
         )
         st.success("✅ Ambiente pronto!")
         st.info("A aplicação será reiniciada para usar as novas ferramentas. Por favor, aguarde.")
-        time.sleep(5) # Dá tempo para o usuário ler a mensagem
-        st.rerun() # Força o reinício da aplicação
+        time.sleep(5)
+        st.rerun()
     except subprocess.CalledProcessError as e:
         st.error("Falha ao instalar o navegador do Playwright.")
-        st.code(f"Erro: {e.stderr}")
+        st.code(f"Output: {e.stdout}\n\nError: {e.stderr}")
         st.stop()
     except Exception as e:
         st.error(f"Um erro inesperado ocorreu durante a instalação: {e}")
         st.stop()
 
-# Verifica se o navegador está instalado. Se não, executa a instalação.
-# A verificação é feita checando a existência de um arquivo específico do chromium.
-# O caminho pode variar um pouco, mas a ausência do diretório é um bom indicador.
-chromium_path = os.path.expanduser("~/.cache/ms-playwright/chromium-1091") # Exemplo de caminho
-if 'playwright_installed' not in st.session_state and not os.path.exists(chromium_path):
-    install_playwright()
-    st.session_state.playwright_installed = True
+# Lógica principal: só executa a instalação se o navegador não estiver lá
+if not is_chromium_installed():
+    install_playwright_chromium()
 
 # ==============================================================================
 
