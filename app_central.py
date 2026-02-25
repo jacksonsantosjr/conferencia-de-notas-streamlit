@@ -60,30 +60,30 @@ import base64
 # # 'limpar_arquivos_temporarios' sempre que o programa estiver prestes a fechar.
 # #atexit.register(limpar_arquivos_temporarios)
 
-# # ==============================================================================
-# # CONFIGURAÇÕES GERAIS E ESTADO DA SESSÃO
-# # ==============================================================================
-# st.set_page_config(
-#     layout="wide",
-#     page_title="Conferência Avançada de Notas Fiscais",
-#     page_icon="📝"
-# )
+# ==============================================================================
+# CONFIGURAÇÕES GERAIS E ESTADO DA SESSÃO
+# ==============================================================================
+st.set_page_config(
+    layout="wide",
+    page_title="Conferência Avançada de Notas Fiscais",
+    page_icon="📝"
+)
 
-# # --- Inicialização do Estado da Sessão ---
-# # Etapa 1: Download
-# if 'robot_running' not in st.session_state: st.session_state.robot_running = False
-# if 'process_finished' not in st.session_state: st.session_state.process_finished = False
-# if 'summary_data' not in st.session_state: st.session_state.summary_data = None
-# if 'pause_state' not in st.session_state: st.session_state.pause_state = False
-# # Etapa 2: Conferência
-# if 'dados_processados' not in st.session_state: st.session_state.dados_processados = None
-# if 'id_upload_atual' not in st.session_state: st.session_state.id_upload_atual = ""
-# if 'pagina_atual' not in st.session_state: st.session_state.pagina_atual = 0
-# if 'tempo_execucao' not in st.session_state: st.session_state.tempo_execucao = ""
-# if 'pdf_files_map' not in st.session_state: st.session_state.pdf_files_map = {}
-# # Etapa 3: Movimentação e Login
-# if 'user_logged_in' not in st.session_state: st.session_state.user_logged_in = None
-# if 'password_logged_in' not in st.session_state: st.session_state.password_logged_in = None
+# --- Inicialização do Estado da Sessão ---
+# Etapa 1: Download
+if 'robot_running' not in st.session_state: st.session_state.robot_running = False
+if 'process_finished' not in st.session_state: st.session_state.process_finished = False
+if 'summary_data' not in st.session_state: st.session_state.summary_data = None
+if 'pause_state' not in st.session_state: st.session_state.pause_state = False
+# Etapa 2: Conferência
+if 'dados_processados' not in st.session_state: st.session_state.dados_processados = None
+if 'id_upload_atual' not in st.session_state: st.session_state.id_upload_atual = ""
+if 'pagina_atual' not in st.session_state: st.session_state.pagina_atual = 0
+if 'tempo_execucao' not in st.session_state: st.session_state.tempo_execucao = ""
+if 'pdf_files_map' not in st.session_state: st.session_state.pdf_files_map = {}
+# Etapa 3: Movimentação e Login
+if 'user_logged_in' not in st.session_state: st.session_state.user_logged_in = None
+if 'password_logged_in' not in st.session_state: st.session_state.password_logged_in = None
 
 # ==============================================================================
 # FUNÇÕES AUXILIARES GLOBAIS (sem alterações)
