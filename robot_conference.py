@@ -1551,7 +1551,8 @@ if tesseract_path:
     with st.expander("📂 Arquivos para Conferência", expanded=st.session_state.dados_processados is None):
         pdf_files_prontos = []
         arquivos_ignorados = []
-        pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+        #pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+        pasta_downloads = "Notas_Fluig_Temporarias"
         palavras_chave_filtro = ["boleto", "bol", "orçamento", "orç", "fatura", "relatorio", "comunicação de venda", "artesp", "demonstrativo", "extrato", "sabesp", "enel"]
         if os.path.exists(pasta_downloads):
             for filename in os.listdir(pasta_downloads):
@@ -1721,6 +1722,7 @@ if tesseract_path:
                         st.markdown(pdf_display, unsafe_allow_html=True)
                     else:
                         st.error("Arquivo PDF não encontrado na memória para exibição.")
+
 
 
 
