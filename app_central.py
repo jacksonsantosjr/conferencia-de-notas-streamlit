@@ -4,7 +4,7 @@ import streamlit as st
 import os
 import json
 import time
-import psutil
+# import psutil
 import pandas as pd
 import fitz
 import pytesseract
@@ -15,108 +15,207 @@ import altair as alt
 import itertools
 import concurrent.futures
 import base64
-import subprocess
-import atexit
-import glob # glob é ótimo para encontrar arquivos com padrões, como "robot_instance_*.py"
+# import subprocess
+# import atexit
+# import glob # glob é ótimo para encontrar arquivos com padrões, como "robot_instance_*.py"
 
 # =============================================================================
 # FUNÇÃO DE LIMPEZA DE ARQUIVOS TEMPORÁRIOS
 # =============================================================================
-def limpar_arquivos_temporarios():
-    """
-    Encontra e deleta arquivos temporários da sessão anterior no diretório
-    onde o executável está rodando.
-    """
-    # Pega o diretório onde o script/executável está rodando
-    diretorio_base = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else os.getcwd()
+# def limpar_arquivos_temporarios():
+#     """
+#     Encontra e deleta arquivos temporários da sessão anterior no diretório
+#     onde o executável está rodando.
+#     """
+#     # Pega o diretório onde o script/executável está rodando
+#     diretorio_base = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else os.getcwd()
     
-    print(f"Verificando arquivos temporários em: {diretorio_base}")
+#     print(f"Verificando arquivos temporários em: {diretorio_base}")
     
-    padroes_para_deletar = [
-        "progress.json",
-        "summary.json",
-        "robot_instance_*.py"
-    ]
+#     padroes_para_deletar = [
+#         "progress.json",
+#         "summary.json",
+#         "robot_instance_*.py"
+#     ]
     
-    for padrao in padroes_para_deletar:
-        # Constrói o caminho completo para a busca
-        caminho_busca = os.path.join(diretorio_base, padrao)
-        arquivos_encontrados = glob.glob(caminho_busca)
+#     for padrao in padroes_para_deletar:
+#         # Constrói o caminho completo para a busca
+#         caminho_busca = os.path.join(diretorio_base, padrao)
+#         arquivos_encontrados = glob.glob(caminho_busca)
         
-        if not arquivos_encontrados:
-            continue # Pula para o próximo padrão se nada for encontrado
+#         if not arquivos_encontrados:
+#             continue # Pula para o próximo padrão se nada for encontrado
 
-        for arquivo in arquivos_encontrados:
-            try:
-                os.remove(arquivo)
-                print(f"Arquivo antigo removido: {arquivo}")
-            except OSError as e:
-                print(f"Erro ao remover o arquivo antigo {arquivo}: {e}")
+#         for arquivo in arquivos_encontrados:
+#             try:
+#                 os.remove(arquivo)
+#                 print(f"Arquivo antigo removido: {arquivo}")
+#             except OSError as e:
+#                 print(f"Erro ao remover o arquivo antigo {arquivo}: {e}")
 
-# =============================================================================
-# REGISTRA A FUNÇÃO DE LIMPEZA
-# =============================================================================
-# Esta é a linha mágica: ela diz ao Python para chamar a função
-# 'limpar_arquivos_temporarios' sempre que o programa estiver prestes a fechar.
-#atexit.register(limpar_arquivos_temporarios)
+# # =============================================================================
+# # REGISTRA A FUNÇÃO DE LIMPEZA
+# # =============================================================================
+# # Esta é a linha mágica: ela diz ao Python para chamar a função
+# # 'limpar_arquivos_temporarios' sempre que o programa estiver prestes a fechar.
+# #atexit.register(limpar_arquivos_temporarios)
 
-# ==============================================================================
-# CONFIGURAÇÕES GERAIS E ESTADO DA SESSÃO
-# ==============================================================================
-st.set_page_config(
-    layout="wide",
-    page_title="Conferência Avançada de Notas Fiscais",
-    page_icon="📝"
-)
+# # ==============================================================================
+# # CONFIGURAÇÕES GERAIS E ESTADO DA SESSÃO
+# # ==============================================================================
+# st.set_page_config(
+#     layout="wide",
+#     page_title="Conferência Avançada de Notas Fiscais",
+#     page_icon="📝"
+# )
 
-# --- Inicialização do Estado da Sessão ---
-# Etapa 1: Download
-if 'robot_running' not in st.session_state: st.session_state.robot_running = False
-if 'process_finished' not in st.session_state: st.session_state.process_finished = False
-if 'summary_data' not in st.session_state: st.session_state.summary_data = None
-if 'pause_state' not in st.session_state: st.session_state.pause_state = False
-# Etapa 2: Conferência
-if 'dados_processados' not in st.session_state: st.session_state.dados_processados = None
-if 'id_upload_atual' not in st.session_state: st.session_state.id_upload_atual = ""
-if 'pagina_atual' not in st.session_state: st.session_state.pagina_atual = 0
-if 'tempo_execucao' not in st.session_state: st.session_state.tempo_execucao = ""
-if 'pdf_files_map' not in st.session_state: st.session_state.pdf_files_map = {}
-# Etapa 3: Movimentação e Login
-if 'user_logged_in' not in st.session_state: st.session_state.user_logged_in = None
-if 'password_logged_in' not in st.session_state: st.session_state.password_logged_in = None
+# # --- Inicialização do Estado da Sessão ---
+# # Etapa 1: Download
+# if 'robot_running' not in st.session_state: st.session_state.robot_running = False
+# if 'process_finished' not in st.session_state: st.session_state.process_finished = False
+# if 'summary_data' not in st.session_state: st.session_state.summary_data = None
+# if 'pause_state' not in st.session_state: st.session_state.pause_state = False
+# # Etapa 2: Conferência
+# if 'dados_processados' not in st.session_state: st.session_state.dados_processados = None
+# if 'id_upload_atual' not in st.session_state: st.session_state.id_upload_atual = ""
+# if 'pagina_atual' not in st.session_state: st.session_state.pagina_atual = 0
+# if 'tempo_execucao' not in st.session_state: st.session_state.tempo_execucao = ""
+# if 'pdf_files_map' not in st.session_state: st.session_state.pdf_files_map = {}
+# # Etapa 3: Movimentação e Login
+# if 'user_logged_in' not in st.session_state: st.session_state.user_logged_in = None
+# if 'password_logged_in' not in st.session_state: st.session_state.password_logged_in = None
 
 # ==============================================================================
 # FUNÇÕES AUXILIARES GLOBAIS (sem alterações)
 # ==============================================================================
-def get_robot_pid():
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-        try:
-            if proc.info['name'] == 'pythonw.exe' and proc.info['cmdline'] and 'robot_instance' in ' '.join(proc.info['cmdline']):
-                return proc.info['pid']
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess): pass
-    return None
+# def get_robot_pid():
+#     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+#         try:
+#             if proc.info['name'] == 'pythonw.exe' and proc.info['cmdline'] and 'robot_instance' in ' '.join(proc.info['cmdline']):
+#                 return proc.info['pid']
+#         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess): pass
+#     return None
 
-def force_kill_robot():
-    pid = get_robot_pid()
-    if pid:
-        try: p = psutil.Process(pid); p.kill(); return True
-        except psutil.NoSuchProcess: return False
-    return False
+# def force_kill_robot():
+#     pid = get_robot_pid()
+#     if pid:
+#         try: p = psutil.Process(pid); p.kill(); return True
+#         except psutil.NoSuchProcess: return False
+#     return False
 
-def generate_robot_script(user, password):
-    with open("template_robot.py", "r", encoding='utf-8') as f: template = f.read()
-    script_content = template.replace("{USER}", user).replace("{PASS}", password)
-    script_name = f"robot_instance_{int(time.time())}.pyw"
-    script_path = os.path.join(os.path.expanduser("~"), "Downloads", script_name)
-    with open(script_path, "w", encoding='utf-8') as f: f.write(script_content)
-    return script_path
+# def generate_robot_script(user, password):
+#     with open("template_robot.py", "r", encoding='utf-8') as f: template = f.read()
+#     script_content = template.replace("{USER}", user).replace("{PASS}", password)
+#     script_name = f"robot_instance_{int(time.time())}.pyw"
+#     script_path = os.path.join(os.path.expanduser("~"), "Downloads", script_name)
+#     with open(script_path, "w", encoding='utf-8') as f: f.write(script_content)
+#     return script_path
 
-def clean_temp_files():
-    base_path = os.path.join(os.path.expanduser("~"), "Downloads")
-    for item in os.listdir(base_path):
-        if (item.startswith("robot_instance_") and item.endswith(".pyw")) or item in ["progress.json", "control.json", "summary.json"]:
-            try: os.remove(os.path.join(base_path, item))
-            except Exception as e: print(f"Aviso: Não foi possível limpar o arquivo {item}: {e}")
+# def clean_temp_files():
+#     base_path = os.path.join(os.path.expanduser("~"), "Downloads")
+#     for item in os.listdir(base_path):
+#         if (item.startswith("robot_instance_") and item.endswith(".pyw")) or item in ["progress.json", "control.json", "summary.json"]:
+#             try: os.remove(os.path.join(base_path, item))
+#             except Exception as e: print(f"Aviso: Não foi possível limpar o arquivo {item}: {e}")
+
+# COLE ESTA NOVA FUNÇÃO NO LUGAR DAS QUE VOCÊ DELETOU
+
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+def run_download_robot(username, password, progress_placeholder):
+    """
+    Função completa do robô Playwright para fazer login, navegar e baixar arquivos.
+    Adaptada para rodar no Streamlit Cloud.
+    """
+    FLUIG_URL = "http://fluig.censo-nso.com.br:8080/portal/p/1/home"
+    CONFERENCIA_URL = "http://fluig.censo-nso.com.br:8080/portal/p/1/conferencia_fiscal"
+    
+    DOWNLOAD_DIR = "Notas_Fluig_Temporarias"
+    if not os.path.exists(DOWNLOAD_DIR ):
+        os.makedirs(DOWNLOAD_DIR)
+
+    try:
+        with sync_playwright() as p:
+            progress_placeholder.info("🤖 Iniciando navegador...")
+            browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox"])
+            context = browser.new_context(accept_downloads=True)
+            page = context.new_page()
+
+            progress_placeholder.info("🔐 Acessando e fazendo login no Fluig...")
+            page.goto(FLUIG_URL, timeout=60000)
+            with page.expect_navigation(wait_until="load", timeout=60000):
+                page.fill('#username', username)
+                page.fill('#password', password)
+                page.click('#submitLogin')
+            
+            progress_placeholder.info("🧭 Navegando para a Central de Tarefas...")
+            menu_principal_locator = page.locator("a").filter(has_text="Central Controladoria")
+            menu_principal_locator.wait_for(state="visible", timeout=30000)
+            menu_principal_locator.hover()
+            menu_principal_locator.click()
+            page.get_by_role("link", name=" Conferência Fiscal").hover()
+            page.get_by_role("link", name=" Conferência Fiscal").click()
+            page.wait_for_url(CONFERENCIA_URL, timeout=60000)
+
+            progress_placeholder.info("📊 Localizando tarefas na página...")
+            page.wait_for_selector("table tbody tr", timeout=60000)
+            time.sleep(3)
+            
+            linhas_tarefa_locator = page.locator("table tbody tr")
+            count_tarefas = linhas_tarefa_locator.count()
+
+            if count_tarefas == 0:
+                progress_placeholder.warning("✅ Nenhuma tarefa encontrada para download.")
+                browser.close()
+                return True, 0 # Retorna sucesso e 0 arquivos baixados
+
+            progress_placeholder.info(f"📥 {count_tarefas} tarefas encontradas. Iniciando downloads...")
+            
+            for i in range(count_tarefas):
+                tarefa_atual = linhas_tarefa_locator.nth(i)
+                
+                id_fluig = "ID_NAO_ENCONTRADO"
+                try:
+                    link_da_celula = tarefa_atual.locator("td:first-child a")
+                    link_da_celula.wait_for(state="visible", timeout=5000)
+                    texto_do_link = link_da_celula.inner_text()
+                    match = re.search(r'\d+', texto_do_link)
+                    if match:
+                        id_fluig = match.group(0)
+                except Exception:
+                    pass
+
+                tarefa_atual.get_by_role("link", name="Anexo").first.click()
+                seletor_dentro_do_modal = "#select-toolbar > button"
+                page.wait_for_selector(seletor_dentro_do_modal, timeout=30000)
+                page.click(seletor_dentro_do_modal)
+
+                with page.expect_download() as download_info:
+                    page.click("#select-toolbar > ul > li.download.fs-cursor-pointer > a")
+                
+                download = download_info.value
+                nome_original = download.suggested_filename
+                novo_nome_arquivo = f"{id_fluig} - {nome_original}"
+                caminho_arquivo = os.path.join(DOWNLOAD_DIR, novo_nome_arquivo)
+                download.save_as(caminho_arquivo)
+                
+                progress_placeholder.info(f"({i+1}/{count_tarefas}) Baixado: {novo_nome_arquivo}")
+                
+                botao_fechar = page.locator("div.wcm-panel-header-bt-close")
+                botao_fechar.wait_for(state="visible", timeout=10000)
+                botao_fechar.click()
+                page.wait_for_selector(seletor_dentro_do_modal, state='detached', timeout=10000)
+
+            progress_placeholder.success(f"✅ Download de {count_tarefas} arquivos concluído!")
+            browser.close()
+            return True, count_tarefas
+
+    except PlaywrightTimeoutError as e:
+        st.error(f"Ocorreu um erro de Timeout no robô: A página demorou demais para responder. Detalhes: {e}")
+        return False, 0
+    except Exception as e:
+        st.error(f"Ocorreu um erro inesperado durante a execução do robô: {e}")
+        return False, 0
 
 def find_tesseract_cmd():
     if 'tesseract_cmd_path' in st.session_state: return st.session_state.tesseract_cmd_path
@@ -214,11 +313,19 @@ KW_TOTAL = ["TOTAL", "BRUTO", "SERVIÇO", "NOTA", "VALOR", "LIQUIDO", "VALOR DOS
 def analisar_nota(file_content, file_name, df_erp, numeros_validos_erp, fluigs_validos_erp, col_fluig_nome):
     texto = ler_pdf_ocr(file_content) or ""
     match_row = pd.DataFrame()
-    match_fluig_id_search = re.search(r"FLUIG_(\d{6,})", file_name, re.IGNORECASE)
+    # match_fluig_id_search = re.search(r"FLUIG_(\d{6,})", file_name, re.IGNORECASE)
+    # if match_fluig_id_search and col_fluig_nome:
+    #     fluig_id_from_name = int(match_fluig_id_search.group(1))
+    #     possible_match = df_erp[df_erp[col_fluig_nome] == fluig_id_from_name]
+    #     if not possible_match.empty: match_row = possible_match
+
+    match_fluig_id_search = re.match(r"(\d+)\s*-", file_name)
     if match_fluig_id_search and col_fluig_nome:
         fluig_id_from_name = int(match_fluig_id_search.group(1))
         possible_match = df_erp[df_erp[col_fluig_nome] == fluig_id_from_name]
-        if not possible_match.empty: match_row = possible_match
+        if not possible_match.empty:
+            match_row = possible_match
+        
     else:
         texto_cabecalho = texto[:3000]
         padroes_nf = [r"N[ºo°]\s*:?\s*(\d{3,})", r"Nota\s*Fiscal\s*:?\s*(\d+)", r"NFS-e\s*:?\s*(\d+)", r"DANFE.*?(\d{3,})"]
@@ -386,111 +493,154 @@ with st.sidebar:
 #                 del st.session_state[key]
 #             st.rerun()
 
-# ==============================================================================
-# PÁGINA 1: DOWNLOAD DAS NOTAS FISCAIS
-# ==============================================================================
+# # ==============================================================================
+# # PÁGINA 1: DOWNLOAD DAS NOTAS FISCAIS
+# # ==============================================================================
+# if pagina_selecionada == "📥 Download das Notas Fiscais":
+#     st.header("Etapa 1: Download de Anexos do Fluig")
+
+#     # Se o usuário já está logado, pula a tela de login e vai direto para o monitoramento/resumo
+#     if st.session_state.user_logged_in:
+#         if st.session_state.process_finished:
+#             st.success("Processo finalizado!")
+#             if st.session_state.summary_data:
+#                 summary = st.session_state.summary_data
+#                 if summary.get("status") == "success":
+#                     st.subheader("Resumo do Processamento")
+#                     duration = summary.get("duration_seconds")
+#                     if duration is not None:
+#                         minutes, seconds = divmod(int(duration), 60)
+#                         duration_str = f"{minutes} min {seconds} seg"
+#                     else:
+#                         duration_str = "N/A"
+
+#                     col1, col2, col3 = st.columns(3)
+#                     col1.metric("Fluigs Processados", summary.get("total_fluigs", "N/A"))
+#                     col2.metric("Arquivos Baixados", summary.get("downloaded_count", "N/A"))
+#                     col3.metric("Tempo Total", duration_str) # <--- USA A STRING FORMATADA
+#                     # --- FIM DA CORREÇÃO ---
+                    
+#                     st.info(f"**Anexos sem opção de download:** {summary.get('skipped_count', 0)}")
+#                     if summary.get("skipped_list"):
+#                         with st.expander("Ver lista de anexos não baixados"): st.code('\n'.join(summary.get('skipped_list', [])))
+#                     pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+#                     if st.button("📂 Abrir Pasta de Downloads"):
+#                         try: os.startfile(pasta_downloads)
+#                         except AttributeError: subprocess.run(['xdg-open', pasta_downloads])
+#                 elif summary.get("status") == "cancelled": st.warning("O processo foi cancelado pelo usuário.")
+#                 else:
+#                     st.error("Ocorreu um erro durante a execução do robô."); st.code(summary.get("message", "Nenhuma mensagem de erro detalhada."))
+#             if st.button("⬅️ Voltar para o Início"):
+#                 st.session_state.robot_running = False; st.session_state.process_finished = False
+#                 st.session_state.summary_data = None; st.session_state.pause_state = False
+#                 clean_temp_files(); st.rerun()
+        
+#         elif st.session_state.robot_running:
+#             st.info("🤖 Robô em execução... Acompanhe o progresso abaixo.")
+#             progress_bar = st.progress(0, text="Aguardando início...")
+#             st.write("")
+#             c1, c2, c3, c4 = st.columns([2, 2, 2, 6])
+#             if st.session_state.pause_state:
+#                 if c1.button("▶️ Continuar", use_container_width=True):
+#                     with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "run"}, f)
+#                     st.session_state.pause_state = False; st.rerun()
+#             else:
+#                 if c1.button("⏸️ Pausar", use_container_width=True):
+#                     with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "pause"}, f)
+#                     st.session_state.pause_state = True; st.rerun()
+#             if c2.button("⏹️ Cancelar", use_container_width=True):
+#                 st.toast("Comando 'Cancelar' enviado! Encerrando processo...")
+#                 force_kill_robot(); clean_temp_files()
+#                 st.session_state.robot_running = False; st.session_state.process_finished = True
+#                 st.session_state.summary_data = {"status": "cancelled"}; st.rerun()
+#             summary_file = os.path.join(os.path.expanduser("~"), "Downloads", "summary.json")
+#             while True:
+#                 robot_pid = get_robot_pid()
+#                 summary_exists = os.path.exists(summary_file)
+#                 if robot_pid is None and summary_exists: break
+#                 if robot_pid is None and not st.session_state.get('initial_wait_done', False):
+#                      time.sleep(2)
+#                      if get_robot_pid() is None:
+#                          st.session_state.summary_data = {"status": "error", "message": "O processo do robô terminou inesperadamente."}; break
+#                 progress_file = os.path.join(os.path.expanduser("~"), "Downloads", "progress.json")
+#                 if os.path.exists(progress_file):
+#                     try:
+#                         with open(progress_file, "r", encoding='utf-8') as f: progress_data = json.load(f)
+#                         total = progress_data.get("total", 1); current = progress_data.get("current", 0); message = progress_data.get("message", "...")
+#                         percent_complete = current / total if total > 0 else 0
+#                         progress_bar.progress(percent_complete, text=message)
+#                     except: pass
+#                 time.sleep(1)
+#             st.session_state.robot_running = False; st.session_state.process_finished = True
+#             if os.path.exists(summary_file):
+#                 try:
+#                     with open(summary_file, "r", encoding='utf-8') as f: st.session_state.summary_data = json.load(f)
+#                 except: st.session_state.summary_data = {"status": "error", "message": "Falha ao ler o arquivo de resumo."}
+#             st.rerun()
+        
+#         else:
+#             # Se está logado, mas nenhum processo rodando, mostra um botão para iniciar
+#             st.info("Você já está logado. Clique abaixo para iniciar o download dos anexos.")
+#             if st.button("📥 Iniciar Download", use_container_width=False):
+#                 try:
+#                     clean_temp_files()
+#                     # Usa as credenciais salvas na sessão
+#                     script_path = generate_robot_script(st.session_state.user_logged_in, st.session_state.password_logged_in)
+#                     os.startfile(script_path)
+#                     time.sleep(3)
+#                     if get_robot_pid() is not None:
+#                         st.session_state.robot_running = True
+#                         st.session_state.initial_wait_done = True
+#                         st.rerun()
+#                     else: st.error("Falha ao iniciar o processo do robô.")
+#                 except Exception as e: st.error(f"Ocorreu um erro ao gerar o robô: {e}")
+
+#     # Se o usuário NÃO está logado, mostra o formulário de login
+#     else:
+#         st.info("Insira suas credenciais do Fluig para iniciar a automação.")
+#         with st.form("login_form"):
+#             user = st.text_input("Usuário do Fluig")
+#             password = st.text_input("Senha do Fluig", type="password")
+#             submitted = st.form_submit_button("Entrar") 
+            
+#             if submitted:
+#                 if user and password:
+#                     # ✅ NOVA LÓGICA CORRETA (APENAS FAZ LOGIN) ✅
+#                     # Salva as credenciais na sessão
+#                     st.session_state.user_logged_in = user
+#                     st.session_state.password_logged_in = password
+#                     # Força o recarregamento da página para refletir o estado de "logado"
+#                     st.rerun() 
+#                 else:
+#                     st.error("Por favor, preencha o usuário e a senha.")
+
+# SUBSTITUA TODA A SEÇÃO DA ETAPA 1 POR ISTO:
+
 if pagina_selecionada == "📥 Download das Notas Fiscais":
     st.header("Etapa 1: Download de Anexos do Fluig")
 
-    # Se o usuário já está logado, pula a tela de login e vai direto para o monitoramento/resumo
+    # Se o usuário já está logado, mostra o botão para iniciar
     if st.session_state.user_logged_in:
-        if st.session_state.process_finished:
-            st.success("Processo finalizado!")
-            if st.session_state.summary_data:
-                summary = st.session_state.summary_data
-                if summary.get("status") == "success":
-                    st.subheader("Resumo do Processamento")
-                    duration = summary.get("duration_seconds")
-                    if duration is not None:
-                        minutes, seconds = divmod(int(duration), 60)
-                        duration_str = f"{minutes} min {seconds} seg"
-                    else:
-                        duration_str = "N/A"
-
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Fluigs Processados", summary.get("total_fluigs", "N/A"))
-                    col2.metric("Arquivos Baixados", summary.get("downloaded_count", "N/A"))
-                    col3.metric("Tempo Total", duration_str) # <--- USA A STRING FORMATADA
-                    # --- FIM DA CORREÇÃO ---
-                    
-                    st.info(f"**Anexos sem opção de download:** {summary.get('skipped_count', 0)}")
-                    if summary.get("skipped_list"):
-                        with st.expander("Ver lista de anexos não baixados"): st.code('\n'.join(summary.get('skipped_list', [])))
-                    pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
-                    if st.button("📂 Abrir Pasta de Downloads"):
-                        try: os.startfile(pasta_downloads)
-                        except AttributeError: subprocess.run(['xdg-open', pasta_downloads])
-                elif summary.get("status") == "cancelled": st.warning("O processo foi cancelado pelo usuário.")
+        st.info("Você já está logado. Clique abaixo para iniciar o download dos anexos.")
+        if st.button("📥 Iniciar Download", use_container_width=False, type="primary"):
+            progress_placeholder = st.empty()
+            with st.spinner("Executando robô... Isso pode levar alguns minutos. Por favor, aguarde."):
+                success, count = run_download_robot(st.session_state.user_logged_in, st.session_state.password_logged_in, progress_placeholder)
+            
+            if success:
+                if count > 0:
+                    st.success(f"Robô finalizado! {count} arquivos baixados. Prossiga para a etapa de conferência.")
                 else:
-                    st.error("Ocorreu um erro durante a execução do robô."); st.code(summary.get("message", "Nenhuma mensagem de erro detalhada."))
-            if st.button("⬅️ Voltar para o Início"):
-                st.session_state.robot_running = False; st.session_state.process_finished = False
-                st.session_state.summary_data = None; st.session_state.pause_state = False
-                clean_temp_files(); st.rerun()
-        
-        elif st.session_state.robot_running:
-            st.info("🤖 Robô em execução... Acompanhe o progresso abaixo.")
-            progress_bar = st.progress(0, text="Aguardando início...")
-            st.write("")
-            c1, c2, c3, c4 = st.columns([2, 2, 2, 6])
-            if st.session_state.pause_state:
-                if c1.button("▶️ Continuar", use_container_width=True):
-                    with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "run"}, f)
-                    st.session_state.pause_state = False; st.rerun()
+                    st.info("Robô finalizado. Nenhum arquivo novo para baixar.")
+                time.sleep(3)
+                st.session_state.pagina_selecionada = "conferencia"
+                st.rerun()
             else:
-                if c1.button("⏸️ Pausar", use_container_width=True):
-                    with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "pause"}, f)
-                    st.session_state.pause_state = True; st.rerun()
-            if c2.button("⏹️ Cancelar", use_container_width=True):
-                st.toast("Comando 'Cancelar' enviado! Encerrando processo...")
-                force_kill_robot(); clean_temp_files()
-                st.session_state.robot_running = False; st.session_state.process_finished = True
-                st.session_state.summary_data = {"status": "cancelled"}; st.rerun()
-            summary_file = os.path.join(os.path.expanduser("~"), "Downloads", "summary.json")
-            while True:
-                robot_pid = get_robot_pid()
-                summary_exists = os.path.exists(summary_file)
-                if robot_pid is None and summary_exists: break
-                if robot_pid is None and not st.session_state.get('initial_wait_done', False):
-                     time.sleep(2)
-                     if get_robot_pid() is None:
-                         st.session_state.summary_data = {"status": "error", "message": "O processo do robô terminou inesperadamente."}; break
-                progress_file = os.path.join(os.path.expanduser("~"), "Downloads", "progress.json")
-                if os.path.exists(progress_file):
-                    try:
-                        with open(progress_file, "r", encoding='utf-8') as f: progress_data = json.load(f)
-                        total = progress_data.get("total", 1); current = progress_data.get("current", 0); message = progress_data.get("message", "...")
-                        percent_complete = current / total if total > 0 else 0
-                        progress_bar.progress(percent_complete, text=message)
-                    except: pass
-                time.sleep(1)
-            st.session_state.robot_running = False; st.session_state.process_finished = True
-            if os.path.exists(summary_file):
-                try:
-                    with open(summary_file, "r", encoding='utf-8') as f: st.session_state.summary_data = json.load(f)
-                except: st.session_state.summary_data = {"status": "error", "message": "Falha ao ler o arquivo de resumo."}
-            st.rerun()
-        
-        else:
-            # Se está logado, mas nenhum processo rodando, mostra um botão para iniciar
-            st.info("Você já está logado. Clique abaixo para iniciar o download dos anexos.")
-            if st.button("📥 Iniciar Download", use_container_width=False):
-                try:
-                    clean_temp_files()
-                    # Usa as credenciais salvas na sessão
-                    script_path = generate_robot_script(st.session_state.user_logged_in, st.session_state.password_logged_in)
-                    os.startfile(script_path)
-                    time.sleep(3)
-                    if get_robot_pid() is not None:
-                        st.session_state.robot_running = True
-                        st.session_state.initial_wait_done = True
-                        st.rerun()
-                    else: st.error("Falha ao iniciar o processo do robô.")
-                except Exception as e: st.error(f"Ocorreu um erro ao gerar o robô: {e}")
-
+                st.error("O robô encontrou um erro. Verifique as mensagens acima e tente novamente.")
+    
     # Se o usuário NÃO está logado, mostra o formulário de login
     else:
-        st.info("Insira suas credenciais do Fluig para iniciar a automação.")
+        st.info("Insira suas credenciais do Fluig para continuar.")
         with st.form("login_form"):
             user = st.text_input("Usuário do Fluig")
             password = st.text_input("Senha do Fluig", type="password")
@@ -498,11 +648,8 @@ if pagina_selecionada == "📥 Download das Notas Fiscais":
             
             if submitted:
                 if user and password:
-                    # ✅ NOVA LÓGICA CORRETA (APENAS FAZ LOGIN) ✅
-                    # Salva as credenciais na sessão
                     st.session_state.user_logged_in = user
                     st.session_state.password_logged_in = password
-                    # Força o recarregamento da página para refletir o estado de "logado"
                     st.rerun() 
                 else:
                     st.error("Por favor, preencha o usuário e a senha.")
@@ -534,7 +681,8 @@ elif pagina_selecionada == "🔍 Conferência Fluig x RM":
 
     with st.expander("📂 Arquivos para Conferência", expanded=st.session_state.dados_processados is None):
         pdf_files_prontos = []; arquivos_ignorados = []
-        pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+        # pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+        pasta_downloads = "Notas_Fluig_Temporarias"
         palavras_chave_filtro = ["boleto", "bol", "orçamento", "fatura", "relatorio", "demonstrativo", "extrato","sabesp", "enel"]
         # if os.path.exists(pasta_downloads):
         #     for filename in os.listdir(pasta_downloads):
