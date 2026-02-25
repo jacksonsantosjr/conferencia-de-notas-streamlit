@@ -1,1 +1,2 @@
-playwright install --with-deps chromium
+#!/bin/bash
+python -m playwright install --with-deps chromium
