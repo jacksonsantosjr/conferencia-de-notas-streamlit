@@ -1,28 +1,32 @@
-# template_robot_movimentacao.py
+# template_robot_movimentacao.py (VERSÃO COMPATÍVEL COM LINUX/DOCKER)
 
 import os
 import time
 from playwright.sync_api import sync_playwright
 import json
-import ast  # <-- NOVO: Biblioteca nativa para converter string em lista de forma segura
+import ast
+
+# --- DIRETÓRIO TEMPORÁRIO UNIVERSAL ---
+TEMP_DIR = os.path.join(os.getcwd(), "temp_data")
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 def report_progress(total, current, message):
     try:
         progress_data = {"total": total, "current": current, "message": message}
-        progress_file = os.path.join(os.path.expanduser("~"), "Downloads", "progress_movimentacao.json")
+        progress_file = os.path.join(TEMP_DIR, "progress_movimentacao.json")
         with open(progress_file, "w", encoding='utf-8') as f:
             json.dump(progress_data, f, ensure_ascii=False)
     except: pass
 
 def write_summary(summary_data):
     try:
-        summary_file = os.path.join(os.path.expanduser("~"), "Downloads", "summary_movimentacao.json")
+        summary_file = os.path.join(TEMP_DIR, "summary_movimentacao.json")
         with open(summary_file, "w", encoding='utf-8') as f:
             json.dump(summary_data, f, ensure_ascii=False)
     except: pass
 
 def check_control_command():
-    control_file = os.path.join(os.path.expanduser("~"), "Downloads", "control_movimentacao.json")
+    control_file = os.path.join(TEMP_DIR, "control_movimentacao.json")
     if os.path.exists(control_file):
         try:
             with open(control_file, 'r', encoding='utf-8') as f:
@@ -35,22 +39,11 @@ def run():
     usuario = "{USER}"
     senha = "{PASS}"
     
-    # AGORA ENTRE ASPAS: O Pylance lê como uma simples string e não apita erro.
     lista_fluigs_str = "{FLUIGS_LIST}" 
 
-    # # Converte a string injetada de volta para uma Lista Python real
-    # try:
-    #     lista_fluigs = ast.literal_eval(lista_fluigs_str) if lista_fluigs_str != "{FLUIGS_LIST}" else []
-    # except Exception:
-    #     lista_fluigs = [
-    
-    # --- NOVO CONVERSOR À PROVA DE BALAS ---
     try:
-        # Apenas verifica se a lista injetada tem colchetes
         if "[" in lista_fluigs_str:
-            # Limpa colchetes, aspas, espaços e lixos de memória (nan)
             texto_limpo = lista_fluigs_str.replace("[", "").replace("]", "").replace("'", "").replace('"', "").replace("nan", "")
-            # Corta pelas vírgulas e guarda só o que for texto válido
             lista_fluigs = [item.strip() for item in texto_limpo.split(",") if item.strip()]
         else:
             lista_fluigs = []
@@ -65,12 +58,10 @@ def run():
     try:
         report_progress(len(lista_fluigs), 0, "Iniciando automação e fazendo login...")
         with sync_playwright() as p:
-            # Rodando silenciosamente (headless=True)
             browser = p.chromium.launch(headless=True)
             context = browser.new_context(viewport={'width': 1920, 'height': 1080})
             page = context.new_page()
 
-            # 1. ACESSO E LOGIN
             page.goto("http://fluig.censo-nso.com.br:8080/portal/home")
             if page.locator('//*[@id="username"]').is_visible():
                 page.locator('//*[@id="username"]').fill(usuario)
@@ -84,7 +75,6 @@ def run():
             except:
                 raise Exception("Falha no Login ou tempo excedido.")
 
-            # 2. NAVEGAÇÃO
             report_progress(len(lista_fluigs), 0, "Navegando para Conferência Fiscal...")
             time.sleep(0.5)
             try: page.mouse.move(50, 300)
@@ -108,7 +98,6 @@ def run():
                 except:
                     raise Exception("Erro de navegação. Não foi possível acessar a Conferência Fiscal.")
 
-            # 3. IDENTIFICAR O FRAME DA TABELA
             report_progress(len(lista_fluigs), 0, "Buscando tabela de documentos...")
             time.sleep(1)
             frame_alvo = None
@@ -123,7 +112,6 @@ def run():
             if not frame_alvo:
                 frame_alvo = page.main_frame
 
-            # 4. LOOP DE MARCAÇÃO
             qtd_marcados = 0
             ids_nao_encontrados = []
             total = len(lista_fluigs)
@@ -150,7 +138,6 @@ def run():
                 except Exception as e:
                     ids_nao_encontrados.append(fluig_id)
 
-            # 5. AÇÃO FINAL: MOVIMENTAR
             if qtd_marcados > 0:
                 report_progress(total, total, "Clicando no botão 'Movimentar Documentos'...")
                 time.sleep(1)
