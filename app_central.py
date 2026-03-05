@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import sys
 import json
 import time
 import psutil
@@ -19,13 +20,27 @@ import glob
 import shutil
 
 # =============================================================================
+# DIRETÓRIO TEMPORÁRIO UNIVERSAL (Substitui o "Downloads" do Windows)
+# =============================================================================
+TEMP_DIR = os.path.join(os.getcwd(), "temp_data")
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+# =============================================================================
 # FUNÇÃO DE LIMPEZA DE ARQUIVOS TEMPORÁRIOS
 # =============================================================================
 def limpar_arquivos_temporarios():
+    padroes_para_deletar = ["progress*.json", "summary*.json", "control*.json", "robot_instance_*.py*", "robot_mov_instance_*.py*"]
+    
+    # Limpa na raiz (caso algum arquivo tenha vazado)
     diretorio_base = os.path.dirname(os.path.abspath(__file__)) if '__file__' in locals() else os.getcwd()
-    padroes_para_deletar = ["progress*.json", "summary*.json", "control*.json", "robot_instance_*.pyw", "robot_mov_instance_*.pyw"]
     for padrao in padroes_para_deletar:
         for arquivo in glob.glob(os.path.join(diretorio_base, padrao)):
+            try: os.remove(arquivo)
+            except OSError: pass
+            
+    # Limpa na nova pasta temporária
+    for padrao in padroes_para_deletar:
+        for arquivo in glob.glob(os.path.join(TEMP_DIR, padrao)):
             try: os.remove(arquivo)
             except OSError: pass
 
@@ -61,8 +76,8 @@ if 'summary3_data' not in st.session_state: st.session_state.summary3_data = Non
 def get_robot_pid():
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            #if proc.info['name'] == 'pythonw.exe' and proc.info['cmdline']:
-            if proc.info['name'] in ['pythonw.exe', 'python.exe'] and proc.info['cmdline']:
+            # Compatível com Linux (python/python3) e Windows (python.exe/pythonw.exe)
+            if proc.info['name'] in ['pythonw.exe', 'python.exe', 'python', 'python3'] and proc.info['cmdline']:
                 cmd = ' '.join(proc.info['cmdline'])
                 if 'robot_instance' in cmd or 'robot_mov_instance' in cmd:
                     return proc.info['pid']
@@ -79,27 +94,23 @@ def force_kill_robot():
 def generate_robot_script(user, password):
     with open("template_robot.py", "r", encoding='utf-8') as f: template = f.read()
     script_content = template.replace("{USER}", user).replace("{PASS}", password)
-    script_name = f"robot_instance_{int(time.time())}.pyw"
-    script_path = os.path.join(os.path.expanduser("~"), "Downloads", script_name)
+    script_name = f"robot_instance_{int(time.time())}.py" # Trocado .pyw para .py (Linux amigável)
+    script_path = os.path.join(TEMP_DIR, script_name)
     with open(script_path, "w", encoding='utf-8') as f: f.write(script_content)
     return script_path
 
-# NOVA FUNÇÃO GERADORA DO ROBÔ 3
 def generate_robot_movimentacao_script(user, password, lista_fluigs):
     with open("template_robot_movimentacao.py", "r", encoding='utf-8') as f: template = f.read()
     script_content = template.replace("{USER}", user).replace("{PASS}", password)
-    script_content = script_content.replace("{FLUIGS_LIST}", str(lista_fluigs)) # Injeta a lista diretamente
-    script_name = f"robot_mov_instance_{int(time.time())}.pyw"
-    #script_name = f"robot_mov_instance_{int(time.time())}.py"
-    script_path = os.path.join(os.path.expanduser("~"), "Downloads", script_name)
+    script_content = script_content.replace("{FLUIGS_LIST}", str(lista_fluigs))
+    script_name = f"robot_mov_instance_{int(time.time())}.py" # Trocado .pyw para .py
+    script_path = os.path.join(TEMP_DIR, script_name)
     with open(script_path, "w", encoding='utf-8') as f: f.write(script_content)
     return script_path
 
 def clean_temp_files():
-    base_path = os.path.join(os.path.expanduser("~"), "Downloads")
+    base_path = TEMP_DIR
     for item in os.listdir(base_path):
-        #if (item.startswith("robot_instance_") or item.startswith("robot_mov_instance_")) and item.endswith(".pyw"):
-        #if (item.startswith("robot_instance_") or item.startswith("robot_mov_instance_")) and (item.endswith(".pyw") or item.endswith(".py")):
         if (item.startswith("robot_instance_") or item.startswith("robot_mov_instance_")) and \
            (item.endswith(".pyw") or item.endswith(".py")):
             try: os.remove(os.path.join(base_path, item))
@@ -301,7 +312,7 @@ if st.session_state.user_logged_in:
     
     if st.sidebar.button("Sair (Logoff)"):
         with st.spinner("Limpando arquivos da sessão..."):
-            caminho_downloads = os.path.join(os.path.expanduser("~"), "Downloads")
+            caminho_downloads = TEMP_DIR
             pasta_fluig = os.path.join(caminho_downloads, "Notas_Fluig")
             arquivos_json = ["progress.json", "summary.json", "control.json", "progress_movimentacao.json", "summary_movimentacao.json", "control_movimentacao.json"]
             for arquivo in arquivos_json:
@@ -309,7 +320,7 @@ if st.session_state.user_logged_in:
                 if os.path.exists(caminho_arquivo):
                     try: os.remove(caminho_arquivo)
                     except: pass
-            arquivos_pyw = glob.glob(os.path.join(caminho_downloads, "robot_instance_*.pyw")) + glob.glob(os.path.join(caminho_downloads, "robot_mov_instance_*.pyw"))
+            arquivos_pyw = glob.glob(os.path.join(caminho_downloads, "robot_instance_*.py*")) + glob.glob(os.path.join(caminho_downloads, "robot_mov_instance_*.py*"))
             for pyw in arquivos_pyw:
                 try: os.remove(pyw)
                 except: pass
@@ -348,10 +359,12 @@ if pagina_selecionada == "📥 Download das Notas Fiscais":
                     st.info(f"**Anexos sem opção de download:** {summary.get('skipped_count', 0)}")
                     if summary.get("skipped_list"):
                         with st.expander("Ver lista de anexos não baixados"): st.code('\n'.join(summary.get('skipped_list', [])))
-                    pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+                    pasta_downloads = os.path.join(TEMP_DIR, "Notas_Fluig")
                     if st.button("📂 Abrir Pasta de Downloads"):
                         try: os.startfile(pasta_downloads)
-                        except AttributeError: subprocess.run(['xdg-open', pasta_downloads])
+                        except Exception: 
+                            try: subprocess.run(['xdg-open', pasta_downloads])
+                            except: st.warning("Abertura direta de pasta não suportada neste ambiente de nuvem.")
                 elif summary.get("status") == "cancelled": st.warning("O processo foi cancelado pelo usuário.")
                 else:
                     st.error("Ocorreu um erro durante a execução do robô."); st.code(summary.get("message", "Nenhuma mensagem de erro detalhada."))
@@ -367,18 +380,18 @@ if pagina_selecionada == "📥 Download das Notas Fiscais":
             c1, c2, c3, c4 = st.columns([2, 2, 2, 6])
             if st.session_state.pause_state:
                 if c1.button("▶️ Continuar", use_container_width=True):
-                    with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "run"}, f)
+                    with open(os.path.join(TEMP_DIR, "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "run"}, f)
                     st.session_state.pause_state = False; st.rerun()
             else:
                 if c1.button("⏸️ Pausar", use_container_width=True):
-                    with open(os.path.join(os.path.expanduser("~"), "Downloads", "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "pause"}, f)
+                    with open(os.path.join(TEMP_DIR, "control.json"), "w", encoding='utf-8') as f: json.dump({"command": "pause"}, f)
                     st.session_state.pause_state = True; st.rerun()
             if c2.button("⏹️ Cancelar", use_container_width=True):
                 st.toast("Comando 'Cancelar' enviado! Encerrando processo...")
                 force_kill_robot(); clean_temp_files()
                 st.session_state.robot_running = False; st.session_state.process_finished = True
                 st.session_state.summary_data = {"status": "cancelled"}; st.rerun()
-            summary_file = os.path.join(os.path.expanduser("~"), "Downloads", "summary.json")
+            summary_file = os.path.join(TEMP_DIR, "summary.json")
             while True:
                 robot_pid = get_robot_pid()
                 summary_exists = os.path.exists(summary_file)
@@ -387,7 +400,7 @@ if pagina_selecionada == "📥 Download das Notas Fiscais":
                      time.sleep(2)
                      if get_robot_pid() is None:
                          st.session_state.summary_data = {"status": "error", "message": "O processo do robô terminou inesperadamente."}; break
-                progress_file = os.path.join(os.path.expanduser("~"), "Downloads", "progress.json")
+                progress_file = os.path.join(TEMP_DIR, "progress.json")
                 if os.path.exists(progress_file):
                     try:
                         with open(progress_file, "r", encoding='utf-8') as f: progress_data = json.load(f)
@@ -409,7 +422,10 @@ if pagina_selecionada == "📥 Download das Notas Fiscais":
                 try:
                     clean_temp_files()
                     script_path = generate_robot_script(st.session_state.user_logged_in, st.session_state.password_logged_in)
-                    os.startfile(script_path)
+                    
+                    # INICIA O PROCESSO DE FORMA COMPATÍVEL COM LINUX
+                    subprocess.Popen([sys.executable, script_path])
+                    
                     time.sleep(3)
                     if get_robot_pid() is not None:
                         st.session_state.robot_running = True
@@ -455,7 +471,7 @@ elif pagina_selecionada == "🔍 Conferência Fluig x RM":
 
     with st.expander("📂 Arquivos para Conferência", expanded=st.session_state.dados_processados is None):
         pdf_files_prontos = []; arquivos_ignorados = []
-        pasta_downloads = os.path.join(os.path.expanduser("~"), "Downloads", "Notas_Fluig")
+        pasta_downloads = os.path.join(TEMP_DIR, "Notas_Fluig")
         palavras_chave_filtro = ["boleto", "bol", "orçamento", "fatura", "relatorio", "demonstrativo", "extrato", "sabesp", "enel", "romaneio", "recebimento", "correios", "ata de audiência", "contrato", "acordo", "aluguel", "alugueis", "proposta", "coleta", "CRQ", "ADITIVO", "PREFIXO", "MENSALIDADE", "carta"]
         if os.path.exists(pasta_downloads):
             todos_os_arquivos = os.listdir(pasta_downloads)
@@ -485,7 +501,7 @@ elif pagina_selecionada == "🔍 Conferência Fluig x RM":
         if outros_arquivos_ignorados:
             with st.expander(f"🚫 **{len(outros_arquivos_ignorados)}** itens ignorados por não serem arquivos PDF."):
                 st.code("\n".join(outros_arquivos_ignorados))
-        else: st.warning("Nenhum arquivo PDF válido encontrado na pasta 'Downloads/Notas_Fluig'.")
+        else: st.warning("Nenhum arquivo PDF válido encontrado na pasta 'temp_data/Notas_Fluig'.")
         excel_file = st.file_uploader("Anexe o relatório do ERP (.xlsx) para iniciar", type=["xlsx", "xls"], key="excel_uploader_etapa2")
 
     if pdf_files_prontos and excel_file:
@@ -704,8 +720,8 @@ elif pagina_selecionada == "🚚 Movimentar Conciliados":
                 st.session_state.summary3_data = {"status": "cancelled"}
                 st.rerun()
                 
-            summary_file = os.path.join(os.path.expanduser("~"), "Downloads", "summary_movimentacao.json")
-            progress_file = os.path.join(os.path.expanduser("~"), "Downloads", "progress_movimentacao.json")
+            summary_file = os.path.join(TEMP_DIR, "summary_movimentacao.json")
+            progress_file = os.path.join(TEMP_DIR, "progress_movimentacao.json")
             
             while True:
                 robot_pid = get_robot_pid()
@@ -778,14 +794,14 @@ elif pagina_selecionada == "🚚 Movimentar Conciliados":
                 st.markdown("---")
                 st.warning("**Atenção:** A ação a seguir irá marcar e movimentar os documentos selecionados no Fluig. Esta ação não pode ser desfeita pelo robô.", icon="⚠️")
                 
-                # BOTÃO PADRONIZADO (Sem type="primary")
                 if st.button("🚀 Iniciar Movimentação dos Documentos", use_container_width=False):
                     try:
                         clean_temp_files()
                         script_path = generate_robot_movimentacao_script(st.session_state.user_logged_in, st.session_state.password_logged_in, lista_fluigs_para_movimentar)
-                        os.startfile(script_path)
-                        #subprocess.Popen(["python", script_path])
-                        #subprocess.Popen([sys.executable, script_path]) # <--- Use sys.executable
+                        
+                        # INICIA O PROCESSO DE FORMA COMPATÍVEL COM LINUX
+                        subprocess.Popen([sys.executable, script_path]) 
+                        
                         time.sleep(3)
                         if get_robot_pid() is not None:
                             st.session_state.robot3_running = True
