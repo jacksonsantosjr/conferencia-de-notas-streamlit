@@ -1,0 +1,95 @@
+======================================================================
+  ROBÔ DE CONFERÊNCIA AVANÇADA DE NOTAS FISCAIS - INSTRUÇÕES
+======================================================================
+
+Olá!
+
+Este documento explica como instalar e usar o robô de conferência no seu computador.
+Por favor, siga os passos com atenção.
+
+
+---------------------------------
+  PARTE 1: INSTALAÇÃO INICIAL
+---------------------------------
+(Você só precisa fazer esta parte UMA ÚNICA VEZ)
+
+
+1. COPIE A PASTA:
+   Copie toda esta pasta ("Conferencia_Avançada_NF") para um local fixo
+   no seu computador.
+   Recomendação: "C:\Conferencia_Avancada_NF" ou na sua "Área de Trabalho".
+
+
+2. RENOMEIE AS EXTENSÕES DOS ARQUIVOS:
+   - Renomeie as extensões dos arquivos .p_ para .py
+   - Renomeie as extensões dos arquivos .ba_ para .bat
+   - Renomeie a extensão do arquivo .cs_ para .css
+
+
+3. EXECUTE O INSTALADOR:
+   - Abra a pasta.
+   - Encontre o arquivo chamado "INSTALAR.bat".
+   - Dê um duplo-clique nele para executar.
+
+
+4. AGUARDE A INSTALAÇÃO:
+   - Uma tela preta do terminal irá aparecer. Pressione qualquer tecla
+     para confirmar e iniciar a instalação.
+   - O programa irá baixar e instalar automaticamente tudo o que é
+     necessário (Python, bibliotecas e o navegador do robô).
+   - **ATENÇÃO:** Este processo pode demorar vários minutos. Por favor,
+     não feche a janela e aguarde com paciência.
+
+
+5. CONFIRME O SUCESSO:
+   - A instalação estará concluída quando você vir a mensagem:
+     "INSTALACAO CONCLUIDA COM SUCESSO!"
+   - Após ver esta mensagem, você pode pressionar qualquer tecla para
+     fechar a janela preta.
+
+
+Pronto! O ambiente está configurado.
+
+
+---------------------------------
+  PARTE 2: COMO USAR O ROBÔ
+---------------------------------
+(Faça isso sempre que quiser usar a ferramenta)
+
+
+1. EXECUTE O ROBÔ:
+   - Abra a pasta onde você salvou os arquivos.
+   - Dê um duplo-clique no arquivo chamado "EXECUTAR_ROBO.bat".
+
+
+2. ACESSE A FERRAMENTA:
+   - Uma tela preta irá aparecer rapidamente e, em seguida, uma nova
+     aba será aberta automaticamente no seu navegador de internet.
+   - Esta aba é a interface do robô.
+
+
+3. USE A FERRAMENTA:
+   - Agora você pode usar a ferramenta normalmente, seguindo as etapas
+     de login, download e conferência.
+
+
+4. IMPORTANTE: COMO FECHAR E LIMPAR TUDO (O JEITO CERTO):
+   - Quando terminar de usar a ferramenta, feche a aba do navegador.
+   - Volte para a TELA PRETA DO TERMINAL que ficou aberta.
+   - Pressione e segure a tecla "CTRL" e depois pressione a tecla "C".
+     (Pressione CTRL+C).
+
+   - O terminal irá perguntar "Deseja finalizar o arquivo em lotes (S/N)?".
+     Pressione a tecla "S" e depois "Enter".
+
+   - A limpeza automática começará, apagando todos os arquivos
+     temporários e a pasta de downloads.
+   - Quando a limpeza terminar, pressione qualquer tecla para fechar
+     a janela preta.
+
+Este método garante que tudo seja limpo corretamente para a próxima vez.
+
+
+======================================================================
+  Em caso de problemas, entre em contato com o responsável.
+======================================================================

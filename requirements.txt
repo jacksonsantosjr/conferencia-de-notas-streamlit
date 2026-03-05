@@ -1,7 +1,10 @@
 streamlit
 pandas
-playwright
 openpyxl
+playwright
 psutil
+Pillow
 PyMuPDF
 pytesseract
+altair
+xlsxwriter
